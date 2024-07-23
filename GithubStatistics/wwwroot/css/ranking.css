@@ -1,0 +1,59 @@
+﻿.ranking-container {
+    width: 80%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: auto;
+    margin-top: 2rem;
+    border: 1px solid #bc8cff;
+}
+
+.header {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    background-color: #bc8cff;
+    color: #fff;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.header-item {
+    padding: 10px;
+    text-align: center;
+}
+
+.ranking-item {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    align-items: center;
+}
+
+    .ranking-item:last-child {
+        border-bottom: none;
+    }
+
+.position {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.avatar-name {
+    display: flex;
+    align-items: center;
+}
+
+    .avatar-name img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .avatar-name span {
+        font-size: 18px;
+        color: #333;
+    }

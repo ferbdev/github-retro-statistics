@@ -1,0 +1,104 @@
+﻿.background-container {
+    
+}
+
+#background-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 90%;
+    height: 70%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+.content {
+    color: #c9f4ff;
+    text-align: center;
+}
+
+.content-footer {
+    margin-top: auto;
+    width: 100%;
+    text-align: center;
+    padding: 10vh 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.neon-button {
+    border: 0px;
+    border-radius: 15px;
+    background-color: transparent;
+    color: #8db0b5;
+    padding: 10px 20px;
+    font-size: 16px;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    box-shadow: #bc8cff 0 0 0 1px inset;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+    /* Efeito hover */
+    .neon-button:hover {
+        box-shadow: 0 0 20px #6281ff, 0 0 30px #6281ff, 0 0 40px #6281ff, 0 0 50px #6281ff; /* Aumentar o brilho ao passar o mouse */
+    }
+
+.submit-button {
+    border: 0px;
+    border-radius: 15px;
+    background-color: transparent;
+    color: #8db0b5;
+    padding: 10px 20px;
+    font-size: 16px;
+    text-transform: uppercase;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+    box-shadow: #bc8cff 0 0 0 1px inset;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+/* Container do formulário */
+.form-container {
+    text-align: center;
+    padding-top: 2em;
+}
+
+/* Estilo dos grupos de formulário */
+.form-group {
+    margin: 10px 0;
+}
+
+/* Estilo dos campos de entrada */
+input[type="text"],
+input[type="password"] {
+    width: 300px;
+    padding: 10px;
+    margin: 10px 0;
+    border: 0px;
+    border-radius: 15px;
+    background-color: transparent;
+    color: #8db0b5;
+    font-size: 16px;
+    box-shadow: #bc8cff 0 0 0 1px inset;
+    outline: none;
+}
+
+h1 {
+    font-size: 2em;
+    margin-top: 1.5em;
+    text-shadow: rgb(93 125 244) 0px 0px 5px, rgb(93 125 244) 0px 0px 5px, rgb(93 125 244) 0px 0px 5px, rgb(93 125 244) 0px 0px 5px, rgb(93 125 244) 0px 0px 5px, rgb(93 125 244) 0px 0px 5px, rgb(93 125 244) 0px 0px 5px;
+}
+
+p {
+    font-size: 1.5em;
+}
