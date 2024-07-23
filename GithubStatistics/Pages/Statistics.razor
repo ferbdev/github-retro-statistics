@@ -12,10 +12,10 @@
         <div class="form-container">
             <form>
                 <div class="form-group">
-                    <input type="text" @bind="Organization" id="organization" name="organization" placeholder="Organization" required>
+                    <input type="text" @bind-value="Organization" id="organization" name="organization" placeholder="Organization" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" @bind="GhToken" id="ghToken" name="ghToken" placeholder="ghToken" required>
+                    <input type="password" @bind-value="GhToken" id="ghToken" name="ghToken" placeholder="ghToken" required>
                 </div>
 
                 <div class="form-group">
@@ -76,12 +76,19 @@
     private string Organization { get; set; }
     private string GhToken { get; set; }
 
-    private static readonly HttpClient client = new HttpClient();
+    private readonly HttpClient client = new HttpClient();
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) // prevent infinite loop
+        {
+            StateHasChanged();  // update view
+        }
+    }
 
     protected override void OnInitialized()
     {
-
+        Console.WriteLine($"StatisticsFound: {StatisticsFound}");
     }
 
     private async Task GetStatistics()
@@ -135,7 +142,11 @@
             Console.WriteLine($"{repoName}: {count} pull requests merged");
         }
 
+        await Task.Delay(200);
+
         StatisticsFound = true;
+
+        StateHasChanged();
     }
 
     private async Task<List<Repo>> GetRepos(string org)
