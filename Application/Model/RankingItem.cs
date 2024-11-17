@@ -1,4 +1,4 @@
-﻿namespace GithubStatistics.Data
+﻿namespace Application.Model
 {
     public class RankingItem
     {

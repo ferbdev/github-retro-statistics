@@ -1,7 +1,5 @@
-using GithubStatistics.Data;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Application.Service;
+using Application.Service.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +18,8 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+
+builder.Services.AddScoped<IGithubStatisticsService, GithubStatisticsService>();
 
 var app = builder.Build();
 

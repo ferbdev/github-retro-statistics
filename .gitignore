@@ -1,3 +1,5 @@
 /.vs
 /GithubStatistics/obj
 /GithubStatistics/bin
+/Application/obj
+/Application/bin

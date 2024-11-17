@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GithubStatistics", "GithubStatistics\GithubStatistics.csproj", "{D6CE93AB-FA48-446A-9080-77765D69A779}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GithubStatistics", "GithubStatistics\GithubStatistics.csproj", "{D6CE93AB-FA48-446A-9080-77765D69A779}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{BE53B974-D1A3-415F-8076-31C01B582E8C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D6CE93AB-FA48-446A-9080-77765D69A779}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6CE93AB-FA48-446A-9080-77765D69A779}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6CE93AB-FA48-446A-9080-77765D69A779}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE53B974-D1A3-415F-8076-31C01B582E8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE53B974-D1A3-415F-8076-31C01B582E8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE53B974-D1A3-415F-8076-31C01B582E8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE53B974-D1A3-415F-8076-31C01B582E8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
