@@ -1,6 +1,8 @@
 ﻿@page "/"
+@using Application.Model;
 
 @inject NavigationManager Navigation
+@inject GithubConfigs ghConfigs;
 
 <body>
     <div class="background-container">
@@ -13,13 +15,24 @@
         <p>Discovery your retrospective statistics.</p>
     </div>
     <div class="content-footer">
-        <button @onclick="RedirectToInputs" class="neon-button">
+        <button @onclick="LoginWithGitHub" class="neon-button">
             Start Now
         </button>
     </div>
 </body>
 
 @code {
+    private string redirectUri = "https://localhost:7145/auth-callback";
+
+    private void LoginWithGitHub()
+    {
+        var authorizationUrl = $"https://github.com/login/oauth/authorize" +
+                               $"?client_id={ghConfigs.ClientId}" +
+                               $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                               $"&scope={Uri.EscapeDataString(ghConfigs.Scope)}";
+        Navigation.NavigateTo(authorizationUrl, forceLoad: true);
+    }
+
     private void RedirectToInputs()
     {
         Navigation.NavigateTo("/getStatistics");

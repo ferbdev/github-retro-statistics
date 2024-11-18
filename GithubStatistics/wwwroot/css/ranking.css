@@ -57,3 +57,29 @@
         font-size: 18px;
         color: #333;
     }
+
+.form-user-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    padding: 40px;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; /* Tornar a imagem arredondada */
+    object-fit: cover; /* Garantir que a imagem preencha o espaço de forma adequada */
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column; /* As labels ficam uma abaixo da outra */
+    gap: 5px; /* Espaço entre as labels */
+    color: #8db0b5;
+}
+
+label {
+    margin: 0; /* Remove margens para um melhor alinhamento */
+}

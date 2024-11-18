@@ -2,6 +2,7 @@
 using Application.Service.Interface;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using static Application.Service.GithubStatisticsService;
 
 namespace Application.Service;
 
@@ -13,14 +14,39 @@ public class GithubStatisticsService : IGithubStatisticsService
 
     private readonly HttpClient client = new HttpClient();
 
-    public async Task GetStatistics(string organization, string ghToken)
+    public GithubStatisticsService()
     {
         client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; MyApp/1.0)");
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", ghToken);
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
         client.Timeout = new TimeSpan(0, 0, 5);
+    }
 
-        var repos = await GetRepos(organization);
+    public async Task<User> GetUser(string ghToken)
+    {
+        var result = new User();
+
+        try
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ghToken);
+
+            var response = await client.GetAsync($"https://api.github.com/user");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            result = JsonSerializer.Deserialize<User>(content);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        return result;
+    }
+
+    public async Task GetStatistics(string organization, string ghToken)
+    {
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", ghToken);
+
+        var repos = await GetReposFromUser();
         var mergeCount = new Dictionary<string, int>();
 
         Console.WriteLine($"Total repos: {repos.Count}");
@@ -65,6 +91,32 @@ public class GithubStatisticsService : IGithubStatisticsService
         }
 
         GithubStatisticsUpdated?.Invoke(rankingItems);
+    }
+
+    private async Task<List<Repo>> GetReposFromUser()
+    {
+        var repos = new List<Repo>();
+        var page = 1;
+
+        try
+        {
+            while (true)
+            {
+                var response = await client.GetAsync($"https://api.github.com/user/repos?visibility=all&per_page=1000&page={page}");
+                response.EnsureSuccessStatusCode();
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<List<Repo>>(content);
+                if (result.Count == 0) break;
+                repos.AddRange(result);
+                page++;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        return repos;
     }
 
     private async Task<List<Repo>> GetRepos(string org)
@@ -129,6 +181,14 @@ public class GithubStatisticsService : IGithubStatisticsService
         }
 
         return pulls;
+    }
+
+    public class User
+    {
+        public string login { get; set; }
+        public string name { get; set; }
+        public string company { get; set; }
+        public string avatar_url { get; set; }
     }
 
     public class Repo

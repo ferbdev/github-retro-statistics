@@ -1,3 +1,4 @@
+using Application.Model;
 using Application.Service;
 using Application.Service.Interface;
 
@@ -20,6 +21,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<IGithubStatisticsService, GithubStatisticsService>();
+builder.Services.AddSingleton<GithubConfigs>();
 
 var app = builder.Build();
 
