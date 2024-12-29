@@ -78,6 +78,7 @@
     flex-direction: column; /* As labels ficam uma abaixo da outra */
     gap: 5px; /* Espaço entre as labels */
     color: #8db0b5;
+    align-items: center;
 }
 
 label {

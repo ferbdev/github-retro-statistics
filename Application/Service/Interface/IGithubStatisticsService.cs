@@ -11,6 +11,7 @@ namespace Application.Service.Interface;
 public interface IGithubStatisticsService
 {
     event Action<List<RankingItem>> GithubStatisticsUpdated;
-    Task GetStatistics(string organization, string ghToken);
+    event Action<TopLongCommit> TopLongCommitUpdated;
+    Task GetTopLongCommit(User user, string organization, string ghToken);
     Task<User> GetUser(string ghToken);
 }

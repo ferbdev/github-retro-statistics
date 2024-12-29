@@ -39,41 +39,57 @@
     }
     else
     {
-        <div class="ranking-container">
-            <div class="header">
-                <div class="header-item">Top 10 Repos</div>
-            </div>
-            @foreach (var item in RankingItems)
-            {
-                <div class="ranking-item">
-                    <div class="position">
-                        @if (item.Position == 1)
-                        {
-                            <span>🥇 @item.Position</span>
-                        }
-                        else if (item.Position == 2)
-                        {
-                            <span>🥈 @item.Position</span>
-                        }
-                        else if (item.Position == 3)
-                        {
-                            <span>🥉 @item.Position</span>
-                        }
-                        else
-                        {
-                            <span>🎖️ @item.Position</span>
-                        }
+        <div class="story-body">
+            <div class="story-container">
+                <div class="story active">
+                    <div>
+                        <h1>O commit mais longo</h1>
 
+                        <div class="box">
+                            <p>@TopLongCommit.RepoName</p>
+                            <p>@TopLongCommit.TotalChangedLines linhas</p>
+                        </div>
                     </div>
-                    <div class="avatar-name">
-                        @if (item.AvatarUrl != null)
-                        {
-                            <img src="@item.AvatarUrl" alt="Avatar">
-                        }
-                        <span>@item.Name</span>
+                    <div>
+                        <label>
+                            Você fez o commit mais longo de todos os tempos!
+                            @TopLongCommit.TotalChangedLines linhas de código no repo @TopLongCommit.RepoName, o que foi?!";
+                        </label>
                     </div>
                 </div>
-            }
+                <div class="story">
+                </div>
+                <div class="story">
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" id="prev">&#9664;</button>
+                    <button class="control-btn" id="next">&#9654;</button>
+                </div>
+            </div>
+
+            <script>
+                const stories = document.querySelectorAll('.story');
+                const prevBtn = document.getElementById('prev');
+                const nextBtn = document.getElementById('next');
+                let currentStory = 0;
+
+                function updateStories(index) {
+                    stories.forEach((story, i) => {
+                        story.classList.toggle('active', i === index);
+                    });
+                }
+
+                prevBtn.addEventListener('click', () => {
+                    currentStory = (currentStory - 1 + stories.length) % stories.length;
+                    updateStories(currentStory);
+                });
+
+                nextBtn.addEventListener('click', () => {
+                    currentStory = (currentStory + 1) % stories.length;
+                    updateStories(currentStory);
+                });
+            </script>
         </div>
     }
 
@@ -94,6 +110,7 @@
     private bool IsLoading { get; set; }
     private string SelectedOrg { get; set; }
     private List<RankingItem> RankingItems = new List<RankingItem>();
+    private TopLongCommit TopLongCommit { get; set; }
     private User User = new User();
 
     [Parameter] public string Organization { get; set; }
@@ -108,23 +125,25 @@
 
     protected async override void OnInitialized()
     {
-        _githubService.GithubStatisticsUpdated += OnGithubStatisticsFinish;
+        _githubService.TopLongCommitUpdated += OnTopLongCommitFinish;
 
         User = await _githubService.GetUser(GithubConfigs.Token);
+
+        Organization = User.company;
 
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task GetStatistics()
     {
-        _ = _githubService.GetStatistics(Organization, GithubConfigs.Token);
+        _ = _githubService.GetTopLongCommit(User, Organization, GithubConfigs.Token);
         IsLoading = true;
         await InvokeAsync(StateHasChanged);
     }
 
-    private void OnGithubStatisticsFinish(List<RankingItem> data)
+    private void OnTopLongCommitFinish(TopLongCommit data)
     {
-        RankingItems = data;
+        TopLongCommit = data;
         StatisticsFound = true;
         IsLoading = false;
         InvokeAsync(StateHasChanged);

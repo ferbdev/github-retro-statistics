@@ -1,5 +1,6 @@
 ﻿using Application.Model;
 using Application.Service.Interface;
+using System.Dynamic;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using static Application.Service.GithubStatisticsService;
@@ -9,8 +10,8 @@ namespace Application.Service;
 public class GithubStatisticsService : IGithubStatisticsService
 {
     public event Action<List<RankingItem>> GithubStatisticsUpdated;
-    private List<RankingItem> rankingItems = new List<RankingItem>();
-    private DateTime sinceDate = DateTime.UtcNow.AddDays(-30);
+    public event Action<TopLongCommit> TopLongCommitUpdated;
+    private DateTime sinceDate = DateTime.UtcNow.AddYears(-6);
 
     private readonly HttpClient client = new HttpClient();
 
@@ -42,12 +43,15 @@ public class GithubStatisticsService : IGithubStatisticsService
         return result;
     }
 
-    public async Task GetStatistics(string organization, string ghToken)
+    public async Task GetTopLongCommit(User user, string organization, string ghToken)
     {
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", ghToken);
 
-        var repos = await GetReposFromUser();
+        var repos = await GetRepos(organization);
+        repos.AddRange(await GetReposFromUser());
         var mergeCount = new Dictionary<string, int>();
+
+        CommitDetails lastTopCommit = null;
 
         Console.WriteLine($"Total repos: {repos.Count}");
 
@@ -59,18 +63,23 @@ public class GithubStatisticsService : IGithubStatisticsService
             await semaphore.WaitAsync();
             try
             {
-                var pulls = await GetPullRequests(organization, repo);
-                Console.WriteLine($"Repo: {repo.name} {pulls.Count} PRs");
+                var commits = await GetCommits(user, null, repo);
 
-                foreach (var pull in pulls)
+                if (organization is not null)
+                    commits.AddRange(await GetCommits(user, organization, repo));
+
+                Console.WriteLine($"Repo: {repo.name} {commits.Count} Commits");
+
+                foreach (var commit in commits)
                 {
-                    if (pull.merged_at.HasValue && pull.merged_at.Value > sinceDate)
+                    var commitDetail = await GetCommitDetails(user, organization, repo, commit.sha);
+
+                    if (commitDetail is not null)
                     {
-                        if (!mergeCount.ContainsKey(repo.name))
-                        {
-                            mergeCount[repo.name] = 0;
-                        }
-                        mergeCount[repo.name]++;
+                        commitDetail.repo = repo.name;
+
+                        if (commitDetail?.stats.total > (lastTopCommit?.stats.total ?? 0))
+                            lastTopCommit = commitDetail;
                     }
                 }
             }
@@ -82,15 +91,14 @@ public class GithubStatisticsService : IGithubStatisticsService
 
         await Task.WhenAll(tasks);
 
-        var topRepos = mergeCount.OrderByDescending(kv => kv.Value).Take(10);
-        rankingItems = mergeCount.OrderByDescending(kv => kv.Value).Take(10).Select((x, index) => new RankingItem { Position = index + 1, Name = $"{x.Key} - {x.Value} PRs" }).ToList();
-        Console.WriteLine("Top 10 repositórios com mais pull requests merged nos últimos 30 dias:");
-        foreach (var (repoName, count, index) in topRepos.Select((kv, index) => (kv.Key, kv.Value, index)))
+        var topLongCommit = new TopLongCommit
         {
-            Console.WriteLine($"{repoName}: {count} pull requests merged");
-        }
+            RepoName = lastTopCommit.repo,
+            TotalChangedLines = lastTopCommit.stats.total,
+            Date = lastTopCommit.commit.author.date
+        };
 
-        GithubStatisticsUpdated?.Invoke(rankingItems);
+        TopLongCommitUpdated?.Invoke(topLongCommit);
     }
 
     private async Task<List<Repo>> GetReposFromUser()
@@ -183,6 +191,108 @@ public class GithubStatisticsService : IGithubStatisticsService
         return pulls;
     }
 
+    private async Task<List<Commit>> GetCommits(User user, string org, Repo repo)
+    {
+        var pulls = new List<Commit>();
+        var page = 1;
+
+        try
+        {
+            while (true)
+            {
+                Console.WriteLine($"calling API for: {repo.name}, Page: {page}");
+                string startDate = sinceDate.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                string finalDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{org ?? user.login}/{repo.name}/commits?author=ferbdev&since={sinceDate}&until={finalDate}&per_page=100&page={page}"))
+                {
+                    var response = await client.SendAsync(request);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Fail to get pull requests from: {repo.name}, Page: {page}");
+                        break;
+                    }
+                    var content = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<List<Commit>>(content);
+
+                    Console.WriteLine($"Result API for: {repo.name}, Page: {page}, Count: {result?.Count}");
+                    pulls.AddRange(result);
+
+                    if (result?.Count == 0) break;
+                    page++;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Result API for: {repo.name}, Page: {page}, Error: {ex.Message}");
+        }
+
+        return pulls;
+    }
+
+    private async Task<CommitDetails?> GetCommitDetails(User user, string org, Repo repo, string commitSha)
+    {
+        var page = 1;
+
+        try
+        {
+            Console.WriteLine($"calling API for: {repo.name}, Page: {page}");
+            string startDate = sinceDate.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            string finalDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{org ?? user.login}/{repo.name}/commits/{commitSha}"))
+            {
+                var response = await client.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Fail to get commit detail from: {repo.name}, Page: {page}");
+                    return null;
+                }
+                var content = await response.Content.ReadAsStringAsync();
+                var commitDetail = JsonSerializer.Deserialize<CommitDetails>(content);
+
+                return commitDetail;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Result API for: {repo.name}, Page: {page}, Error: {ex.Message}");
+
+            throw;
+        }
+    }
+    
+    private async Task<ExpandoObject?> GetLanguages(User user, string org, Repo repo)
+    {
+        var page = 1;
+
+        try
+        {
+            Console.WriteLine($"calling API for: {repo.name}, Page: {page}");
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{org ?? user.login}/{repo.name}/languages"))
+            {
+                var response = await client.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Fail to get commit detail from: {repo.name}, Page: {page}");
+                    return null;
+                }
+                var content = await response.Content.ReadAsStringAsync();
+                var commitDetail = JsonSerializer.Deserialize<ExpandoObject>(content);
+
+                return commitDetail;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Result API for: {repo.name}, Page: {page}, Error: {ex.Message}");
+
+            throw;
+        }
+    }
+
     public class User
     {
         public string login { get; set; }
@@ -199,5 +309,32 @@ public class GithubStatisticsService : IGithubStatisticsService
     public class PullRequest
     {
         public DateTime? merged_at { get; set; }
+    }
+
+    public class Commit
+    {
+        public string sha { get; set; }
+    }
+
+    public class CommitDetails
+    {
+        public string repo { get; set; }
+        public Stats stats { get; set; }
+        public Commit commit { get; set; }
+
+        public class Stats
+        {
+            public int total { get; set; }
+        }
+
+        public class Commit
+        {
+            public string message { get; set; }
+            public Author author { get; set; }
+            public class Author
+            {
+                public string date { get; set; }
+            }
+        }
     }
 }
